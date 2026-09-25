@@ -1,4 +1,4 @@
 @echo off
 echo Starting DNSentinel Frontend...
 cd %~dp0\..\frontend
-call npm run dev
+call npm.cmd run dev
