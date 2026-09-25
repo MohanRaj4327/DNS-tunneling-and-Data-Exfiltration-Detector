@@ -75,6 +75,9 @@ function Dashboard() {
                   <th>Time</th>
                   <th>Source IP</th>
                   <th>Domain</th>
+                  <th>Length</th>
+                  <th>Entropy</th>
+                  <th>Freq</th>
                   <th>Risk Score</th>
                   <th>Severity</th>
                 </tr>
@@ -85,6 +88,9 @@ function Dashboard() {
                     <td>{new Date(alert.timestamp * 1000).toLocaleTimeString()}</td>
                     <td>{alert.source_ip}</td>
                     <td>{alert.query_name}</td>
+                    <td>{alert.query_length || 0}</td>
+                    <td>{alert.entropy ? alert.entropy.toFixed(2) : '0.00'}</td>
+                    <td>{alert.current_frequency || 1}</td>
                     <td>{alert.risk_score}</td>
                     <td>
                       <span className={`badge ${alert.severity.toLowerCase()}`}>
@@ -109,7 +115,11 @@ function Dashboard() {
               <thead>
                 <tr>
                   <th>Time</th>
+                  <th>Source IP</th>
                   <th>Domain</th>
+                  <th>Length</th>
+                  <th>Entropy</th>
+                  <th>Freq</th>
                   <th>Risk Score</th>
                   <th>Status</th>
                 </tr>
@@ -118,7 +128,11 @@ function Dashboard() {
                 {recentQueries.map(query => (
                   <tr key={query.id}>
                     <td>{new Date(query.timestamp * 1000).toLocaleTimeString()}</td>
+                    <td>{query.source_ip || 'Chrome Browser'}</td>
                     <td>{query.query_name}</td>
+                    <td>{query.query_length || 0}</td>
+                    <td>{query.entropy ? query.entropy.toFixed(2) : '0.00'}</td>
+                    <td>{query.current_frequency || 1}</td>
                     <td>{query.risk_score}</td>
                     <td>
                       <span className={`badge ${query.severity.toLowerCase()}`}>

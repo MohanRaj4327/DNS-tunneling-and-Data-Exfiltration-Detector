@@ -28,6 +28,9 @@ class AlertResponse(BaseModel):
     severity: str
     tripwires: List[str]
     reasons: List[str]
+    query_length: Optional[int] = 0
+    entropy: Optional[float] = 0.0
+    current_frequency: Optional[int] = 0
 
 class DeviceSummary(BaseModel):
     source_ip: str
