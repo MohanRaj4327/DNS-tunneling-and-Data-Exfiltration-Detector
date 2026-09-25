@@ -16,25 +16,6 @@ function Sidebar() {
         <AlertTriangle size={18} /> Alerts
       </NavLink>
 
-      <div style={{ marginTop: 'auto', padding: '20px', borderTop: '1px solid var(--border)' }}>
-        <h4 style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: 0, marginBottom: 10 }}>TESTING</h4>
-        <button 
-          className="btn" 
-          style={{ width: '100%', marginBottom: '10px' }}
-          onClick={() => fetch('/api/demo/start', { method: 'POST' })}
-        >
-          ▶ Start Demo
-        </button>
-        <button 
-          className="btn" 
-          style={{ width: '100%', backgroundColor: 'transparent', border: '1px solid var(--border)' }}
-          onClick={() => {
-            fetch('/api/demo/reset', { method: 'POST' }).then(() => window.location.reload());
-          }}
-        >
-          Reset Demo
-        </button>
-      </div>
     </div>
   );
 }

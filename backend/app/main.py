@@ -91,6 +91,12 @@ def get_alerts(db: Session = Depends(get_db), limit: int = 100):
     events = db.query(DNSEvent).filter(DNSEvent.risk_score >= 60).order_by(DNSEvent.timestamp.desc()).limit(limit).all()
     return events
 
+@app.get("/api/queries", response_model=List[AlertResponse])
+def get_queries(db: Session = Depends(get_db), limit: int = 50):
+    # Returns all queries (normal, medium, high)
+    events = db.query(DNSEvent).order_by(DNSEvent.timestamp.desc()).limit(limit).all()
+    return events
+
 @app.get("/api/alerts/{id}", response_model=AlertResponse)
 def get_alert(id: int, db: Session = Depends(get_db)):
     event = db.query(DNSEvent).filter(DNSEvent.id == id).first()

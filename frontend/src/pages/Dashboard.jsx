@@ -6,6 +6,7 @@ function Dashboard() {
   const [status, setStatus] = useState({ api: 'LOADING', monitor: 'UNKNOWN', database: 'UNKNOWN' });
   const [devices, setDevices] = useState([]);
   const [recentAlerts, setRecentAlerts] = useState([]);
+  const [recentQueries, setRecentQueries] = useState([]);
 
   useEffect(() => {
     fetchData();
@@ -23,6 +24,9 @@ function Dashboard() {
 
       const alertsRes = await axios.get('/api/alerts?limit=5');
       setRecentAlerts(alertsRes.data);
+
+      const queriesRes = await axios.get('/api/queries?limit=10');
+      setRecentQueries(queriesRes.data);
     } catch (error) {
       console.error("Error fetching dashboard data", error);
       setStatus(prev => ({ ...prev, api: 'OFFLINE' }));
@@ -60,7 +64,7 @@ function Dashboard() {
       </div>
 
       <div className="panel">
-        <h3>Recent Alerts</h3>
+        <h3>Suspicious Alerts (Score ≥ 60)</h3>
         {recentAlerts.length === 0 ? (
           <p style={{color: 'var(--text-muted)'}}>No suspicious activity detected recently.</p>
         ) : (
@@ -96,31 +100,29 @@ function Dashboard() {
       </div>
 
       <div className="panel">
-        <h3>Monitored Devices</h3>
-        {devices.length === 0 ? (
-          <p style={{color: 'var(--text-muted)'}}>No DNS activity yet.</p>
+        <h3>All Browsing History</h3>
+        {recentQueries.length === 0 ? (
+          <p style={{color: 'var(--text-muted)'}}>No websites visited yet.</p>
         ) : (
           <div className="table-container">
             <table>
               <thead>
                 <tr>
-                  <th>Source IP</th>
-                  <th>Queries</th>
-                  <th>Suspicious</th>
-                  <th>Avg Risk</th>
+                  <th>Time</th>
+                  <th>Domain</th>
+                  <th>Risk Score</th>
                   <th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                {devices.map(dev => (
-                  <tr key={dev.source_ip}>
-                    <td>{dev.source_ip}</td>
-                    <td>{dev.total_queries}</td>
-                    <td>{dev.suspicious_queries}</td>
-                    <td>{Math.round(dev.average_risk)}</td>
+                {recentQueries.map(query => (
+                  <tr key={query.id}>
+                    <td>{new Date(query.timestamp * 1000).toLocaleTimeString()}</td>
+                    <td>{query.query_name}</td>
+                    <td>{query.risk_score}</td>
                     <td>
-                      <span className={`badge ${dev.status === 'NORMAL' ? 'low' : 'high'}`}>
-                        {dev.status}
+                      <span className={`badge ${query.severity.toLowerCase()}`}>
+                        {query.severity}
                       </span>
                     </td>
                   </tr>
