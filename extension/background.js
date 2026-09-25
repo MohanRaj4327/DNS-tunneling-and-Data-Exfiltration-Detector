@@ -28,7 +28,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
         const domain = url.hostname;
         if (domain === '127.0.0.1' || domain === 'localhost') return;
 
-        fetch(`http://127.0.0.1:8000/api/risk/${domain}?source=navigation`)
+        fetch(`http://127.0.0.1:8000/api/risk/${domain}?source=navigation`, { cache: 'no-store' })
             .then(res => res.json())
             .then(data => {
                 // Always update badge with current score
@@ -70,7 +70,7 @@ chrome.tabs.onActivated.addListener(({ tabId }) => {
 // ── Popup message handler ──────────────────────────────────────────────────────
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === 'checkRisk') {
-        fetch(`http://127.0.0.1:8000/api/risk/${request.domain}`)
+        fetch(`http://127.0.0.1:8000/api/risk/${request.domain}`, { cache: 'no-store' })
             .then(res => res.json())
             .then(data => sendResponse(data))
             .catch(() => sendResponse({ error: 'API_UNAVAILABLE' }));
@@ -92,7 +92,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         if (pending === 0) { sendResponse(results); return false; }
 
         domains.forEach(domain => {
-            fetch(`http://127.0.0.1:8000/api/risk/${domain}`)
+            fetch(`http://127.0.0.1:8000/api/risk/${domain}`, { cache: 'no-store' })
                 .then(res => res.json())
                 .then(data => { results[domain] = data; })
                 .catch(() => { results[domain] = { error: true }; })

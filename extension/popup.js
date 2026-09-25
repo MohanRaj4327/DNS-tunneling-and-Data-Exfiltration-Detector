@@ -25,36 +25,64 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const score = response.risk_score;
             const severity = response.severity;
-            const sevClass = `val-${severity.toLowerCase()}`;
-            const reasonsHtml = (response.explanation || ['No unusual DNS behavior detected.'])
-                .map(r => `<li>${r}</li>`).join('');
-
-            content.innerHTML = `
-                <div class="section">
-                    <div class="label">Current Site:</div>
-                    <div class="domain">${domain}</div>
-                </div>
-
-                <div class="section">
-                    <div class="stat-row">
-                        <span class="stat-label">Risk:</span>
-                        <span class="stat-value ${sevClass}">${score}/100</span>
+            
+            // Check if we actually have data for this domain
+            if (severity === 'UNKNOWN' || response.status === 'AWAITING_ANALYSIS') {
+                content.innerHTML = `
+                    <div class="section">
+                        <div class="label">Current Site:</div>
+                        <div class="domain">${domain}</div>
                     </div>
-                    <div class="stat-row">
-                        <span class="stat-label">Status:</span>
-                        <span class="stat-value ${sevClass}">${severity}</span>
+                    <div class="offline-box" style="margin-top: 15px; border-color: var(--border);">
+                        <div class="offline-icon" style="color: var(--text-muted);">⏳</div>
+                        <div class="offline-title" style="color: var(--text);">Awaiting DNS analysis</div>
+                        <div class="offline-msg">
+                            No recent DNS activity detected for this domain by the local monitor.
+                        </div>
                     </div>
-                </div>
+                    <button class="details-btn" id="openDashboard">[ View Details ]</button>
+                `;
+            } else {
+                const sevClass = `val-${severity.toLowerCase()}`;
+                const reasonsHtml = (response.explanation || ['No unusual DNS behavior detected.'])
+                    .map(r => `<li>${r}</li>`).join('');
+                
+                const timeStr = response.timestamp ? new Date(response.timestamp * 1000).toLocaleTimeString() : 'Unknown';
 
-                <div class="section">
-                    <div class="label">Why flagged:</div>
-                    <ul class="reasons-list">
-                        ${reasonsHtml}
-                    </ul>
-                </div>
+                content.innerHTML = `
+                    <div class="section">
+                        <div class="label">Current Site:</div>
+                        <div class="domain">${domain}</div>
+                    </div>
 
-                <button class="details-btn" id="openDashboard">[ View Details ]</button>
-            `;
+                    <div class="section">
+                        <div class="stat-row">
+                            <span class="stat-label">Risk:</span>
+                            <span class="stat-value ${sevClass}">${score}/100</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Severity:</span>
+                            <span class="stat-value ${sevClass}">${severity}</span>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <div class="label">Why?</div>
+                        <ul class="reasons-list">
+                            ${reasonsHtml}
+                        </ul>
+                    </div>
+                    
+                    <div class="section" style="margin-top: 10px; font-size: 0.8rem; color: var(--text-muted);">
+                        <div class="stat-row">
+                            <span class="stat-label" style="font-size: 0.8rem;">Timestamp:</span>
+                            <span class="stat-value" style="font-size: 0.8rem; color: var(--text-muted);">${timeStr}</span>
+                        </div>
+                    </div>
+
+                    <button class="details-btn" id="openDashboard">[ View Details ]</button>
+                `;
+            }
 
             document.getElementById('openDashboard').addEventListener('click', () => {
                 chrome.tabs.create({ url: 'http://localhost:5173' });

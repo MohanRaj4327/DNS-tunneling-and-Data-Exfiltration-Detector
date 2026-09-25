@@ -138,6 +138,14 @@ function showTooltip(x, y, domain, data) {
     const severity = data.severity || 'LOW';
     const reasons  = (data.explanation || []);
 
+    if (severity === 'UNKNOWN' || data.status === 'AWAITING_ANALYSIS') {
+        tooltip.innerHTML = `
+            <div class="tt-domain">${domain}</div>
+            <div class="tt-offline">⏳ Awaiting DNS analysis (no recent local result)</div>
+        `;
+        return;
+    }
+
     const reasonsHtml = reasons.length > 0
         ? reasons.map(r => `• ${r}`).join('<br>')
         : '• No unusual DNS behavior detected.';
@@ -158,16 +166,22 @@ function hideTooltip() {
 
 // ── Fetch risk (with cache) ────────────────────────────────────────────────────
 async function fetchRisk(domain) {
-    if (CACHE[domain] !== undefined) return CACHE[domain];
+    const now = Date.now();
+    if (CACHE[domain] !== undefined) {
+        if (now - CACHE[domain]._timestamp < 10000) {
+            return CACHE[domain].data;
+        }
+    }
+    
     QUEUED.add(domain);
     try {
         const res  = await fetch(`${API}/${domain}`, { cache: 'no-store' });
         const data = await res.json();
-        CACHE[domain] = data;
+        CACHE[domain] = { data: data, _timestamp: now };
         return data;
     } catch {
         const offline = { offline: true };
-        CACHE[domain] = offline;
+        CACHE[domain] = { data: offline, _timestamp: now };
         return offline;
     }
 }
