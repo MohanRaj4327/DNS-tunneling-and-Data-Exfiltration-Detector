@@ -15,9 +15,6 @@ function Sidebar() {
       <NavLink to="/alerts" className={({isActive}) => isActive ? "nav-link active" : "nav-link"}>
         <AlertTriangle size={18} /> Alerts
       </NavLink>
-      <NavLink to="/upload" className={({isActive}) => isActive ? "nav-link active" : "nav-link"}>
-        <Upload size={18} /> CSV Analysis
-      </NavLink>
 
       <div style={{ marginTop: 'auto', padding: '20px', borderTop: '1px solid var(--border)' }}>
         <h4 style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: 0, marginBottom: 10 }}>TESTING</h4>
@@ -51,7 +48,6 @@ function App() {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/alerts" element={<Alerts />} />
-            <Route path="/upload" element={<CSVUpload />} />
           </Routes>
         </div>
       </div>
