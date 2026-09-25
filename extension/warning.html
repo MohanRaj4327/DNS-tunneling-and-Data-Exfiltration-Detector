@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>DNSentinel Warning</title>
+    <style>
+        body { font-family: system-ui, sans-serif; background: #0f172a; color: #f8fafc; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .container { background: #1e293b; padding: 40px; border-radius: 8px; border: 1px solid #ef4444; max-width: 600px; text-align: center; }
+        h1 { color: #ef4444; margin-top: 0; }
+        .domain { font-size: 1.5em; font-weight: bold; margin: 20px 0; word-break: break-all; }
+        .details { text-align: left; background: #0f172a; padding: 20px; border-radius: 4px; margin-bottom: 30px; border: 1px solid #334155; }
+        .reasons { color: #f59e0b; padding-left: 20px; margin-top: 10px; }
+        .buttons { display: flex; gap: 20px; justify-content: center; }
+        button { padding: 10px 20px; border: none; border-radius: 4px; font-size: 1em; cursor: pointer; font-weight: bold; }
+        .btn-back { background: #3b82f6; color: white; }
+        .btn-continue { background: transparent; color: #94a3b8; border: 1px solid #334155; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚠ DNSENTINEL WARNING</h1>
+        <h2>Potentially Suspicious DNS Activity</h2>
+        <div class="domain" id="domainDisplay"></div>
+        
+        <div class="details">
+            <p><strong>Risk Score:</strong> <span id="scoreDisplay"></span>/100</p>
+            <p><strong>Severity:</strong> <span id="severityDisplay"></span></p>
+            <p style="margin-top: 20px"><strong>Why?</strong></p>
+            <ul class="reasons" id="reasonsList"></ul>
+            <p style="margin-top: 20px; font-style: italic; color: #94a3b8;">
+                Possible concern: Characteristics associated with potential DNS tunneling or data exfiltration.
+            </p>
+        </div>
+
+        <div class="buttons">
+            <button class="btn-back" id="btnBack">GO BACK</button>
+            <button class="btn-continue" id="btnContinue">CONTINUE (Not Recommended)</button>
+        </div>
+    </div>
+    <script src="warning.js"></script>
+</body>
+</html>
