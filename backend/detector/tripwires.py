@@ -4,10 +4,10 @@ class TripwireEngine:
     def __init__(self, config: Dict[str, float] = None):
         # Default thresholds
         self.config = config or {
-            "query_length_threshold": 100,
-            "entropy_threshold": 4.5,
-            "frequency_spike_threshold": 50, # absolute queries per window
-            "baseline_deviation_multiplier": 5.0 # times above baseline
+            "query_length_threshold": 50,        # DNS tunneling subdomains are typically 50+ chars
+            "entropy_threshold": 3.5,            # Normal domains are ~2.5-3.0; encoded data is 3.5+
+            "frequency_spike_threshold": 20,     # 20+ queries in window is suspicious
+            "baseline_deviation_multiplier": 3.0 # 3x above baseline is suspicious
         }
         
     def evaluate(self, features: Dict[str, Any]) -> List[Dict[str, Any]]:

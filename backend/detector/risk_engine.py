@@ -3,10 +3,10 @@ from typing import Dict, Any, List
 class RiskEngine:
     def __init__(self, weights: Dict[str, float] = None, severity_thresholds: Dict[str, int] = None):
         self.weights = weights or {
-            "query_length": 0.25,
-            "entropy": 0.35,
-            "frequency": 0.20,
-            "baseline": 0.20
+            "query_length": 0.30,   # Strong signal — tunneling uses long encoded subdomains
+            "entropy": 0.40,        # Strongest signal — encoded data has high entropy
+            "frequency": 0.15,
+            "baseline": 0.15
         }
         
         self.severity_thresholds = severity_thresholds or {
@@ -25,11 +25,11 @@ class RiskEngine:
         """Calculates a normalized 0-100 risk score based on features and tripwires."""
         
         # 1. Calculate component scores (0-100)
-        # Expected max values for normalization (can be tuned)
-        max_expected_len = 150.0
-        max_expected_ent = 5.0
-        max_expected_freq = 100.0
-        max_expected_mult = 10.0
+        # Tighter max_expected values to make scores more sensitive
+        max_expected_len = 80.0    # 80+ chars = fully suspicious subdomain
+        max_expected_ent = 4.5     # 4.5 bits = near-random character distribution
+        max_expected_freq = 50.0   # 50 queries = heavy traffic
+        max_expected_mult = 8.0    # 8x above baseline = very suspicious
         
         length_score = self.normalize_score(features.get("query_length", 0), max_expected_len)
         entropy_score = self.normalize_score(features.get("entropy", 0.0), max_expected_ent)
@@ -48,8 +48,8 @@ class RiskEngine:
             baseline_score * self.weights["baseline"]
         )
         
-        # 3. Boost score based on tripwires
-        tripwire_boost = len(tripwires) * 5.0 # +5 points per tripwire
+        # 3. Boost score based on tripwires — each tripwire is a hard signal
+        tripwire_boost = len(tripwires) * 10.0  # +10 points per tripwire triggered
         
         final_score = min(100.0, raw_score + tripwire_boost)
         final_score_int = int(round(final_score))
