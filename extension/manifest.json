@@ -4,8 +4,7 @@
   "version": "1.0",
   "description": "Monitors current domains for potentially suspicious DNS activity.",
   "action": {
-    "default_popup": "popup.html",
-    "default_icon": "icon.png"
+    "default_popup": "popup.html"
   },
   "background": {
     "service_worker": "background.js"
