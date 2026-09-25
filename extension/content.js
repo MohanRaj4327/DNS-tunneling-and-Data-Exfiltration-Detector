@@ -202,7 +202,8 @@ function attachHover(link) {
 
     link.addEventListener('mouseenter', async (e) => {
         const cached = CACHE[domain];
-        showTooltip(e.clientX, e.clientY, domain, cached || null);
+        const cachedData = cached ? cached.data : null;
+        showTooltip(e.clientX, e.clientY, domain, cachedData);
 
         if (!cached) {
             const data = await fetchRisk(domain);
