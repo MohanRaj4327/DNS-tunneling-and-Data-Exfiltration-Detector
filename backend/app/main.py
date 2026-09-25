@@ -124,8 +124,8 @@ def get_devices(db: Session = Depends(get_db)):
 
 @app.get("/api/risk/{domain}")
 def get_domain_risk(domain: str, db: Session = Depends(get_db)):
-    """Extension endpoint — always analyses fresh so scores reflect current thresholds."""
-    result = detector.analyze("extension", domain, time.time())
+    """Extension endpoint — always analyses fresh so scores reflect current thresholds. Uses static analysis to avoid polluting frequency counters."""
+    result = detector.analyze_static(domain)
     return {
         "domain": domain,
         "risk_score": result["risk"]["risk_score"],

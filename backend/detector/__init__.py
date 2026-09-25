@@ -52,3 +52,39 @@ class DetectionEngine:
             "risk": risk_results,
             "explanation": explanations
         }
+
+    def analyze_static(self, domain: str) -> dict:
+        """Stateless analysis — only uses domain name structure (entropy, length).
+        Does NOT update frequency counters or baseline state.
+        Used by the Chrome extension so hovering over links doesn't pollute detections.
+        """
+        q_len     = calculate_query_length(domain)
+        sub_len   = calculate_subdomain_length(domain)
+        entropy   = calculate_entropy(domain)
+        sub_count = calculate_unique_subdomain_count(domain)
+
+        # Static frequency features — treat as first-time seen
+        features = {
+            "query_length":        q_len,
+            "subdomain_length":    sub_len,
+            "entropy":             entropy,
+            "unique_subdomain_count": sub_count,
+            "current_frequency":   1,
+            "baseline_frequency":  None,
+            "frequency_multiplier": 1.0,
+            "insufficient_data":   True   # no baseline → no frequency tripwire
+        }
+
+        triggered_tripwires = self.tripwires.evaluate(features)
+        risk_results        = self.risk.calculate_risk(features, triggered_tripwires)
+        explanations        = self.risk.generate_explanations(triggered_tripwires, risk_results["risk_score"])
+
+        return {
+            "domain":      domain,
+            "source_ip":   "extension",
+            "features":    features,
+            "tripwires":   triggered_tripwires,
+            "risk":        risk_results,
+            "explanation": explanations
+        }
+
