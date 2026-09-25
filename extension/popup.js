@@ -25,30 +25,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const score = response.risk_score;
             const severity = response.severity;
-            const sevClass = severity.toLowerCase();
+            const sevClass = `val-${severity.toLowerCase()}`;
             const reasonsHtml = (response.explanation || ['No unusual DNS behavior detected.'])
                 .map(r => `<li>${r}</li>`).join('');
 
-            // Score ring color
-            const ringColor = {
-                LOW: '#10b981', MEDIUM: '#f59e0b',
-                HIGH: '#f97316', CRITICAL: '#ef4444'
-            }[severity] || '#10b981';
-
             content.innerHTML = `
-                <div class="domain-name">${domain}</div>
-                <div class="score-ring" style="--ring-color: ${ringColor}">
-                    <div class="score-number">${score}</div>
-                    <div class="score-label">/ 100</div>
-                </div>
-                <div class="severity-badge ${sevClass}">${severity}</div>
-
-                <div class="reasons-box">
-                    <div class="reasons-title">${score >= 60 ? '🚨 Why suspicious?' : '✅ Status'}</div>
-                    <ul class="reason-list">${reasonsHtml}</ul>
+                <div class="section">
+                    <div class="label">Current Site:</div>
+                    <div class="domain">${domain}</div>
                 </div>
 
-                <div class="footer-link" id="openDashboard">Open Dashboard →</div>
+                <div class="section">
+                    <div class="stat-row">
+                        <span class="stat-label">Risk:</span>
+                        <span class="stat-value ${sevClass}">${score}/100</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Status:</span>
+                        <span class="stat-value ${sevClass}">${severity}</span>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="label">Why flagged:</div>
+                    <ul class="reasons-list">
+                        ${reasonsHtml}
+                    </ul>
+                </div>
+
+                <button class="details-btn" id="openDashboard">[ View Details ]</button>
             `;
 
             document.getElementById('openDashboard').addEventListener('click', () => {

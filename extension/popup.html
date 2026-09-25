@@ -9,105 +9,68 @@
             font-family: system-ui, -apple-system, sans-serif;
             width: 300px;
             background: #0f172a;
-            color: #f8fafc;
+            color: #e2e8f0;
             padding: 16px;
+            font-size: 14px;
         }
 
-        .loading { color: #94a3b8; text-align: center; padding: 20px; }
-
-        /* ── Domain name ── */
-        .domain-name {
-            font-size: 0.85em;
-            color: #94a3b8;
-            word-break: break-all;
-            text-align: center;
-            margin-bottom: 12px;
+        .header {
+            font-weight: 800;
+            font-size: 15px;
+            letter-spacing: 1px;
+            color: #38bdf8;
+            margin-bottom: 16px;
+            text-transform: uppercase;
             border-bottom: 1px solid #1e293b;
             padding-bottom: 10px;
         }
 
-        /* ── Score ring ── */
-        .score-ring {
-            width: 90px;
-            height: 90px;
-            border-radius: 50%;
-            border: 5px solid var(--ring-color, #10b981);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 12px;
-            box-shadow: 0 0 16px var(--ring-color, #10b981)55;
-        }
-        .score-number {
-            font-size: 1.8em;
-            font-weight: bold;
-            line-height: 1;
-        }
-        .score-label { font-size: 0.7em; color: #94a3b8; }
+        .section { margin-bottom: 16px; }
+        
+        .label { color: #94a3b8; font-size: 12px; margin-bottom: 4px; }
+        
+        .domain { font-weight: 600; color: #f8fafc; word-break: break-all; }
+        
+        .stat-row { display: flex; margin-bottom: 4px; }
+        .stat-label { color: #94a3b8; width: 55px; }
+        .stat-value { font-weight: bold; }
+        
+        /* Severity Colors */
+        .val-low { color: #10b981; }
+        .val-medium { color: #f59e0b; }
+        .val-high { color: #f97316; }
+        .val-critical { color: #ef4444; }
 
-        /* ── Severity badge ── */
-        .severity-badge {
-            text-align: center;
-            font-size: 0.75em;
-            font-weight: bold;
-            letter-spacing: 1px;
-            padding: 3px 12px;
-            border-radius: 99px;
-            display: inline-block;
+        .reasons-list { list-style: none; color: #cbd5e1; font-size: 13px; line-height: 1.5; }
+        .reasons-list li::before { content: "• "; color: #94a3b8; font-weight: bold; }
+
+        .details-btn {
+            display: block;
             width: 100%;
-            margin-bottom: 12px;
-        }
-        .low      { background: #064e3b33; color: #10b981; border: 1px solid #10b981; }
-        .medium   { background: #451a0333; color: #f59e0b; border: 1px solid #f59e0b; }
-        .high     { background: #431407aa; color: #f97316; border: 1px solid #f97316; }
-        .critical { background: #450a0aaa; color: #ef4444; border: 1px solid #ef4444; }
-
-        /* ── Reasons ── */
-        .reasons-box {
-            background: #1e293b;
-            border-radius: 6px;
-            padding: 10px;
-            margin-bottom: 10px;
-        }
-        .reasons-title { font-size: 0.78em; font-weight: bold; margin-bottom: 6px; color: #cbd5e1; }
-        .reason-list { padding-left: 16px; font-size: 0.78em; color: #94a3b8; line-height: 1.6; }
-
-        /* ── Footer link ── */
-        .footer-link {
-            font-size: 0.75em;
-            color: #3b82f6;
-            text-align: right;
-            cursor: pointer;
-            margin-top: 4px;
-        }
-        .footer-link:hover { text-decoration: underline; }
-
-        /* ── Offline ── */
-        .offline-box {
             text-align: center;
-            padding: 10px 0;
-        }
-        .offline-icon { font-size: 2em; margin-bottom: 6px; color: #f59e0b; }
-        .offline-title { font-size: 1em; font-weight: bold; color: #f59e0b; margin-bottom: 6px; }
-        .offline-msg { font-size: 0.8em; color: #94a3b8; line-height: 1.5; margin-bottom: 10px; }
-        .offline-cmd {
-            background: #1e293b;
+            background: transparent;
+            color: #94a3b8;
+            padding: 10px;
             border-radius: 4px;
-            padding: 6px 10px;
+            font-weight: 600;
+            margin-top: 20px;
+            cursor: pointer;
+            border: 1px solid #334155;
+            transition: all 0.2s;
             font-family: monospace;
-            font-size: 0.75em;
-            color: #10b981;
-            word-break: break-all;
+            font-size: 13px;
         }
+        .details-btn:hover { background: #1e293b; color: #f8fafc; }
+
+        /* Offline */
+        .offline-box { text-align: center; padding: 10px 0; }
+        .offline-title { color: #f59e0b; font-weight: bold; margin-bottom: 8px; }
+        .offline-msg { color: #94a3b8; font-size: 12px; }
     </style>
 </head>
 <body>
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
-        <span style="font-size:1.1em">🛡️</span>
-        <span style="font-weight:bold;font-size:0.95em;color:#38bdf8;">DNSentinel</span>
-    </div>
-    <div id="content"><div class="loading">Analyzing...</div></div>
+    <div class="header">🛡️ DNSENTINEL</div>
+    <div id="content"><div style="text-align:center;color:#94a3b8;padding:20px;">Analyzing...</div></div>
     <script src="popup.js"></script>
 </body>
 </html>
