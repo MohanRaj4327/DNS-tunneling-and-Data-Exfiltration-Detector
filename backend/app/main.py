@@ -123,9 +123,26 @@ def get_devices(db: Session = Depends(get_db)):
     return devices
 
 @app.get("/api/risk/{domain}")
-def get_domain_risk(domain: str, db: Session = Depends(get_db)):
+def get_domain_risk(domain: str, source: str = "hover", db: Session = Depends(get_db)):
     """Extension endpoint — always analyses fresh so scores reflect current thresholds. Uses static analysis to avoid polluting frequency counters."""
     result = detector.analyze_static(domain)
+    
+    # If the user actually entered/clicked the link (navigation), save it to the Dashboard history!
+    if source == "navigation":
+        db_event = DNSEvent(
+            timestamp=time.time(),
+            source_ip="Chrome Browser",
+            query_name=domain,
+            query_type=1,
+            response_code=0,
+            query_length=result["features"]["query_length"],
+            entropy=result["features"]["entropy"],
+            risk_score=result["risk"]["risk_score"],
+            severity=result["risk"]["severity"]
+        )
+        db.add(db_event)
+        db.commit()
+
     return {
         "domain": domain,
         "risk_score": result["risk"]["risk_score"],

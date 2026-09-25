@@ -28,7 +28,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
         const domain = url.hostname;
         if (domain === '127.0.0.1' || domain === 'localhost') return;
 
-        fetch(`http://127.0.0.1:8000/api/risk/${domain}`)
+        fetch(`http://127.0.0.1:8000/api/risk/${domain}?source=navigation`)
             .then(res => res.json())
             .then(data => {
                 // Always update badge with current score
