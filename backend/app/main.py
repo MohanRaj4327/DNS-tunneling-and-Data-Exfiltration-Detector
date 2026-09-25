@@ -160,6 +160,9 @@ def start_demo():
 @app.post("/api/demo/reset")
 def reset_demo(db: Session = Depends(get_db)):
     global detector
+    demo_manager.stop_demo()
+    # Wait briefly for thread to exit
+    time.sleep(0.5)
     # Reset in-memory detector state
     detector = DetectionEngine()
     # Clear database
