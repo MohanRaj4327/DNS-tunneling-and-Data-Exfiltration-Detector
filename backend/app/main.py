@@ -134,32 +134,37 @@ def get_devices(db: Session = Depends(get_db)):
 @app.get("/api/risk/{domain}")
 def get_domain_risk(domain: str, source: str = "hover", db: Session = Depends(get_db)):
     """
-    Extension endpoint — queries the local DNSsentinel component for the latest available result.
-    It does NOT pretend to capture raw DNS packets.
+    Extension endpoint — instantly scores domains via static analysis.
     """
     normalized_domain = domain.lower().rstrip('.')
+    result = detector.analyze_static(normalized_domain)
     
-    # Fetch the most recent actual DNS event for this domain
-    event = db.query(DNSEvent).filter(DNSEvent.query_name == normalized_domain).order_by(DNSEvent.timestamp.desc()).first()
-
-    if not event:
-        return {
-            "domain": normalized_domain,
-            "risk_score": 0,
-            "severity": "UNKNOWN",
-            "status": "AWAITING_ANALYSIS",
-            "explanation": ["Awaiting DNS analysis"],
-            "timestamp": time.time()
-        }
+    # Save navigation events to dashboard history
+    if source == "navigation":
+        db_event = DNSEvent(
+            timestamp=time.time(),
+            source_ip="Chrome Browser",
+            query_name=normalized_domain,
+            query_type=1,
+            response_code=0,
+            query_length=result["features"]["query_length"],
+            entropy=result["features"]["entropy"],
+            risk_score=result["risk"]["risk_score"],
+            severity=result["risk"]["severity"],
+            reasons=result["explanation"]["reasons"],
+            tripwires=[t["tripwire_name"] for t in result["tripwires"]]
+        )
+        db.add(db_event)
+        db.commit()
 
     return {
-        "domain": domain,
-        "risk_score": event.risk_score,
-        "severity": event.severity,
-        "status": "EVALUATED" if event.risk_score < 60 else "POTENTIALLY_SUSPICIOUS",
-        "explanation": event.reasons or ["No unusual DNS behavior detected."],
-        "triggered_tripwires": event.tripwires or [],
-        "timestamp": event.timestamp
+        "domain": normalized_domain,
+        "risk_score": result["risk"]["risk_score"],
+        "severity": result["risk"]["severity"],
+        "status": result["explanation"]["status"],
+        "explanation": result["explanation"]["reasons"],
+        "triggered_tripwires": [t["tripwire_name"] for t in result["tripwires"]],
+        "timestamp": time.time()
     }
 
 @app.post("/api/upload")
