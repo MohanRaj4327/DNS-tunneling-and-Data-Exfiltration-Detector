@@ -26,7 +26,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
             fetch(`http://127.0.0.1:8000/api/risk/${domain}`)
                 .then(res => res.json())
                 .then(data => {
-                    if (data.risk_score >= 60) {
+                    if (data.risk_score >= 30) {
                         // Redirect to warning page
                         const warningUrl = chrome.runtime.getURL(`warning.html?domain=${encodeURIComponent(domain)}&score=${data.risk_score}&severity=${data.severity}&reasons=${encodeURIComponent(JSON.stringify(data.explanation))}`);
                         chrome.tabs.update(tabId, { url: warningUrl });

@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "DNSentinel",
   "version": "1.0",
-  "description": "Monitors current domains for potentially suspicious DNS activity.",
+  "description": "Monitors domains in real-time for potentially suspicious DNS activity and warns you before visiting high-risk sites.",
   "action": {
     "default_popup": "popup.html"
   },
@@ -13,6 +13,14 @@
     "tabs"
   ],
   "host_permissions": [
-    "http://127.0.0.1:8000/*"
+    "http://127.0.0.1:8000/*",
+    "http://*/*",
+    "https://*/*"
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["warning.html", "warning.js"],
+      "matches": ["<all_urls>"]
+    }
   ]
 }
