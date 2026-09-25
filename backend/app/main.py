@@ -167,6 +167,15 @@ def get_domain_risk(domain: str, source: str = "hover", db: Session = Depends(ge
         "timestamp": time.time()
     }
 
+from fastapi.responses import HTMLResponse
+import os
+
+@app.get("/demo", response_class=HTMLResponse)
+def serve_demo():
+    demo_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "demo.html")
+    with open(demo_path, "r", encoding="utf-8") as f:
+        return f.read()
+
 @app.post("/api/upload")
 async def upload_csv(file: UploadFile = File(...)):
     if not file.filename.endswith('.csv'):
