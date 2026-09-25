@@ -124,29 +124,16 @@ def get_devices(db: Session = Depends(get_db)):
 
 @app.get("/api/risk/{domain}")
 def get_domain_risk(domain: str, db: Session = Depends(get_db)):
-    # Extension endpoint
-    event = db.query(DNSEvent).filter(DNSEvent.query_name == domain).order_by(DNSEvent.timestamp.desc()).first()
-    if not event:
-        # Evaluate on the fly if not found
-        result = detector.analyze("0.0.0.0", domain, time.time())
-        return {
-            "domain": domain,
-            "risk_score": result["risk"]["risk_score"],
-            "severity": result["risk"]["severity"],
-            "status": result["explanation"]["status"],
-            "explanation": result["explanation"]["reasons"],
-            "triggered_tripwires": [t["tripwire_name"] for t in result["tripwires"]],
-            "timestamp": time.time()
-        }
-    
+    """Extension endpoint — always analyses fresh so scores reflect current thresholds."""
+    result = detector.analyze("extension", domain, time.time())
     return {
-        "domain": event.query_name,
-        "risk_score": event.risk_score,
-        "severity": event.severity,
-        "status": "POTENTIALLY_SUSPICIOUS" if event.risk_score >= 60 else "LOW_RISK",
-        "explanation": event.reasons,
-        "triggered_tripwires": event.tripwires,
-        "timestamp": event.timestamp
+        "domain": domain,
+        "risk_score": result["risk"]["risk_score"],
+        "severity": result["risk"]["severity"],
+        "status": result["explanation"]["status"],
+        "explanation": result["explanation"]["reasons"],
+        "triggered_tripwires": [t["tripwire_name"] for t in result["tripwires"]],
+        "timestamp": time.time()
     }
 
 @app.post("/api/upload")
