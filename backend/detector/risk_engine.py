@@ -52,6 +52,12 @@ class RiskEngine:
         tripwire_boost = len(tripwires) * 10.0  # +10 points per tripwire triggered
         
         final_score = min(100.0, raw_score + tripwire_boost)
+        
+        # 4. Tripwire gate: if NO tripwires fired, this is almost certainly a
+        # normal domain. Cap at 29 to prevent false positives on safe sites.
+        real_tripwires = [t for t in tripwires if t["tripwire_name"] != "Multi-Indicator"]
+        if len(real_tripwires) == 0:
+            final_score = min(final_score, 29.0)
         final_score_int = int(round(final_score))
         
         # 4. Determine severity

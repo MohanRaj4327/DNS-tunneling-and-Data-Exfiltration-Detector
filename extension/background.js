@@ -21,7 +21,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
         fetch(`http://127.0.0.1:8000/api/risk/${domain}`)
             .then(res => res.json())
             .then(data => {
-                if (data.risk_score >= 30) {
+                if (data.risk_score >= 60) {
                     const params = new URLSearchParams({
                         domain: domain,
                         score: data.risk_score,
