@@ -1,126 +1,134 @@
 /**
- * DNSentinel Content Script
- * Scans all links on the page and highlights suspicious domains.
- * Runs inside every HTTP/HTTPS page.
+ * DNSentinel Content Script v2
+ * Directly calls the local API (no background relay needed).
+ * Scans all links and highlights suspicious domains.
  */
 
-const RISK_CACHE = {};   // domain → risk data
-const CHECKED = new Set();
+const API = 'http://127.0.0.1:8000/api/risk';
+const CACHE = {};      // domain → risk data
+const QUEUED = new Set();
 
 // ── Inject styles ─────────────────────────────────────────────────────────────
 const style = document.createElement('style');
 style.textContent = `
-  .dnsentinel-badge {
+  .dns-badge {
     display: inline-block;
-    font-size: 9px;
+    font-size: 10px;
     font-weight: bold;
-    padding: 1px 4px;
+    padding: 1px 5px;
     border-radius: 3px;
     margin-left: 4px;
     vertical-align: middle;
-    cursor: default;
     font-family: monospace;
-    line-height: 1.4;
-    text-decoration: none !important;
+    cursor: default;
+    pointer-events: none;
+    line-height: 1.5;
   }
-  .dnsentinel-low    { background: #064e3b; color: #6ee7b7; border: 1px solid #10b981; }
-  .dnsentinel-medium { background: #451a03; color: #fcd34d; border: 1px solid #f59e0b; }
-  .dnsentinel-high   { background: #450a0a; color: #fca5a5; border: 1px solid #ef4444; }
-  .dnsentinel-critical { background: #7f1d1d; color: #fff; border: 1px solid #dc2626; animation: dnspulse 1s infinite; }
-
-  @keyframes dnspulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
+  .dns-medium   { background:#451a03; color:#fcd34d; border:1px solid #f59e0b; }
+  .dns-high     { background:#450a0a; color:#fca5a5; border:1px solid #ef4444; }
+  .dns-critical { background:#7f1d1d; color:#fff;    border:1px solid #dc2626;
+                  animation: dns-pulse 1s ease-in-out infinite; }
+  @keyframes dns-pulse {
+    0%,100% { opacity:1; } 50% { opacity:0.55; }
   }
-
-  .dnsentinel-link-warn {
+  .dns-link-warn {
     outline: 2px solid #ef4444 !important;
-    outline-offset: 1px;
+    outline-offset: 2px;
     border-radius: 2px;
   }
 `;
 document.head.appendChild(style);
 
-// ── Collect unique domains from all links ────────────────────────────────────
-function getUniqueDomains(links) {
-    const domains = new Set();
-    links.forEach(a => {
-        try {
-            const url = new URL(a.href);
-            if (url.protocol !== 'http:' && url.protocol !== 'https:') return;
-            const domain = url.hostname;
-            if (domain === window.location.hostname) return; // skip same-origin
-            if (domain === '127.0.0.1' || domain === 'localhost') return;
-            domains.add(domain);
-        } catch (e) {}
-    });
-    return [...domains];
+// ── Fetch risk for a single domain ────────────────────────────────────────────
+async function fetchRisk(domain) {
+    if (CACHE[domain] !== undefined) return CACHE[domain];
+    try {
+        const res = await fetch(`${API}/${domain}`, { cache: 'no-store' });
+        const data = await res.json();
+        CACHE[domain] = data;
+        return data;
+    } catch (e) {
+        CACHE[domain] = null; // API offline — mark to skip
+        return null;
+    }
 }
 
-// ── Apply visual badge to a link ─────────────────────────────────────────────
+// ── Apply badge to a link element ─────────────────────────────────────────────
 function applyBadge(link, data) {
-    if (link.dataset.dnsChecked) return;
-    link.dataset.dnsChecked = '1';
-
-    if (!data || data.error) return;
+    if (!data || link.dataset.dnsTagged) return;
+    link.dataset.dnsTagged = '1';
 
     const score = data.risk_score;
-    const severity = (data.severity || 'LOW').toLowerCase();
+    if (score < 30) return; // LOW — no badge
 
-    // Only badge MEDIUM and above
-    if (score < 30) return;
+    const severity = (data.severity || 'LOW').toLowerCase();
+    const reasons = (data.explanation || []).join('\n') || 'Potentially suspicious DNS pattern.';
 
     const badge = document.createElement('span');
-    badge.className = `dnsentinel-badge dnsentinel-${severity}`;
-    badge.title = `DNSentinel: ${score}/100 ${data.severity}\n${(data.explanation || []).join('\n')}`;
+    badge.className = `dns-badge dns-${severity}`;
     badge.textContent = `⚡${score}`;
+    badge.title = `DNSentinel ${data.severity} (${score}/100)\n${reasons}`;
 
-    // Add red outline to HIGH/CRITICAL links
     if (score >= 60) {
-        link.classList.add('dnsentinel-link-warn');
+        link.classList.add('dns-link-warn');
     }
 
-    // Insert badge after the link
     if (link.parentNode) {
-        link.parentNode.insertBefore(badge, link.nextSibling);
+        link.insertAdjacentElement('afterend', badge);
     }
 }
 
-// ── Scan links and fetch risk scores in batches ───────────────────────────────
-function scanLinks() {
+// ── Scan all links on page ────────────────────────────────────────────────────
+async function scanLinks() {
     const links = [...document.querySelectorAll('a[href]')];
-    const newDomains = getUniqueDomains(links).filter(d => !CHECKED.has(d));
-    if (newDomains.length === 0) return;
 
-    newDomains.forEach(d => CHECKED.add(d));
+    // Collect unique external domains not yet queued
+    const todo = new Map(); // domain → [links]
+    for (const link of links) {
+        try {
+            const u = new URL(link.href);
+            if (u.protocol !== 'http:' && u.protocol !== 'https:') continue;
+            const domain = u.hostname;
+            if (domain === location.hostname) continue;
+            if (domain === '127.0.0.1' || domain === 'localhost') continue;
+            if (QUEUED.has(domain)) {
+                // Already fetched — just badge it
+                if (CACHE[domain]) applyBadge(link, CACHE[domain]);
+                continue;
+            }
+            if (!todo.has(domain)) todo.set(domain, []);
+            todo.get(domain).push(link);
+        } catch (e) {}
+    }
 
-    // Batch check via background script
-    chrome.runtime.sendMessage({ action: 'checkBatch', domains: newDomains }, results => {
-        if (!results) return;
-        Object.entries(results).forEach(([domain, data]) => {
-            RISK_CACHE[domain] = data;
-        });
+    if (todo.size === 0) return;
 
-        // Apply badges to all matching links
-        links.forEach(link => {
-            try {
-                const domain = new URL(link.href).hostname;
-                if (RISK_CACHE[domain]) {
-                    applyBadge(link, RISK_CACHE[domain]);
-                }
-            } catch (e) {}
-        });
-    });
+    // Mark all as queued before firing fetches
+    for (const domain of todo.keys()) QUEUED.add(domain);
+
+    // Fire all fetches concurrently (max 10 at a time to be polite)
+    const domains = [...todo.keys()];
+    const CHUNK = 10;
+    for (let i = 0; i < domains.length; i += CHUNK) {
+        const chunk = domains.slice(i, i + CHUNK);
+        await Promise.all(chunk.map(async domain => {
+            const data = await fetchRisk(domain);
+            if (data) todo.get(domain)?.forEach(link => applyBadge(link, data));
+        }));
+    }
 }
 
-// ── Run on page load + watch for dynamic content ──────────────────────────────
-window.addEventListener('load', () => {
-    setTimeout(scanLinks, 800); // slight delay to let page settle
-});
+// ── Run on load, then watch for dynamic content ───────────────────────────────
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => setTimeout(scanLinks, 600));
+} else {
+    setTimeout(scanLinks, 600);
+}
 
-// MutationObserver to catch dynamically loaded links (SPAs, infinite scroll, etc.)
+// MutationObserver — handles SPAs, infinite scroll, lazy-loaded content
+let debounceTimer;
 const observer = new MutationObserver(() => {
-    clearTimeout(observer._timer);
-    observer._timer = setTimeout(scanLinks, 500);
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(scanLinks, 800);
 });
-observer.observe(document.body, { childList: true, subtree: true });
+observer.observe(document.documentElement, { childList: true, subtree: true });
